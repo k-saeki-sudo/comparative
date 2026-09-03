@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
@@ -32,10 +33,28 @@
 </div>
 
 <script>
+// 1. 不規則変化の定義
 const IRREGULAR = {
     "good": "better", "bad": "worse", "far": "farther / further",
     "little": "less", "much": "more", "many": "more"
 };
+
+// 2. 中学・高校レベルの主要な形容詞・副詞リスト（超高速照合用）
+const VALID_WORDS = new Set([
+    "good", "bad", "far", "little", "much", "many",
+    "big", "small", "tall", "short", "long", "fast", "slow", "high", "low",
+    "hard", "easy", "happy", "sad", "early", "late", "new", "old", "young",
+    "hot", "cold", "warm", "cool", "rich", "poor", "dark", "light", "heavy",
+    "deep", "shallow", "clean", "dirty", "cheap", "dear", "near", "kind",
+    "nice", "fine", "safe", "wide", "large", "bright", "strong", "weak",
+    "busy", "funny", "sunny", "windy", "cloudy", "rainy", "pretty", "heavy",
+    "lucky", "angry", "hungry", "healthy", "friendly", "lovely",
+    "famous", "useful", "careful", "helpful", "active", "beauty", "beautiful",
+    "important", "interesting", "difficult", "expensive", "popular", "exciting",
+    "dangerous", "convenient", "wonderful", "necessary", "impossible",
+    "quiet", "clever", "simple", "narrow", "shallow", "gentle",
+    "well", "hardly", "slowly", "quickly", "easily", "clearly", "carefully"
+]);
 
 function countSyllables(word) {
     word = word.toLowerCase();
@@ -56,7 +75,7 @@ function showError(message) {
     resultDetail.textContent = message;
 }
 
-async function check() {
+function check() {
     const wordInput = document.getElementById("wordInput");
     const word = wordInput.value.trim().toLowerCase();
     const resultBox = document.getElementById("resultBox");
@@ -65,46 +84,37 @@ async function check() {
 
     if (!word) return;
 
-    // 1. アルファベット以外の入力（数字や日本語など）を判定
+    // A. 英字以外の入力（数字や日本語など）をチェック
     if (!/^[a-z]+$/.test(word)) {
         showError("入力された単語のつづりが間違っています。もう一度確認して入力してください。");
         return;
     }
 
-    // 処理中の表示
-    resultBox.className = "result-box";
-    resultBox.style.display = "block";
-    resultTitle.textContent = "確認中...";
-    resultDetail.textContent = "";
-
-    // 2. 実在する英単語かどうかをオンライン辞書APIでチェック
-    try {
-        const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${word}`);
-        if (!response.ok) {
-            // 単語が見つからない場合（404）
-            showError("入力された単語のつづりが間違っています。もう一度確認して入力してください。");
-            return;
-        }
-    } catch (e) {
-        // ネットワーク接続不可の場合のフォールバック（オフライン環境用）
-        console.warn("辞書APIへのアクセスに失敗したため、単語存在チェックをスキップします。");
+    // B. ローカル辞書リストに存在するかチェック（高速判定）
+    if (!VALID_WORDS.has(word)) {
+        showError("入力された単語のつづりが間違っています。もう一度確認して入力してください。");
+        return;
     }
 
-    // 3. 不規則変化の判定
+    // 判定結果の表示準備
+    resultBox.className = "result-box";
+    resultBox.style.display = "block";
+
+    // C. 不規則変化の判定
     if (IRREGULAR[word]) {
         resultTitle.textContent = `比較級: ${IRREGULAR[word]}`;
         resultDetail.textContent = "ルール: 不規則変化（特別な形で覚える単語）です。";
         return;
     }
 
-    // 4. 規則変化の判定
+    // D. 規則変化の判定
     const syllables = countSyllables(word);
 
     if (syllables === 1) {
         resultTitle.textContent = `比較級: ${word}er`;
         resultDetail.textContent = "ルール: 1音節の短い単語なので、後ろに -er をつけます。";
     } else if (syllables === 2) {
-        if (word.endswith('y')) {
+        if (word.endsWith('y')) {
             const form = word.slice(0, -1) + "ier";
             resultTitle.textContent = `比較級: ${form}`;
             resultDetail.textContent = "ルール: 2音節で語尾が -y のため、y を i に変えて -er をつけます。";
