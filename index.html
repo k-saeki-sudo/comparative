@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>英語 比較級チェッカー</title>
+    <style>
+        body { font-family: sans-serif; background-color: #f0f4f8; padding: 20px; display: flex; justify-content: center; }
+        .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 100%; max-width: 480px; }
+        h1 { font-size: 1.4rem; color: #1e3a8a; margin-bottom: 20px; text-align: center; }
+        input { width: 100%; padding: 12px; font-size: 1.1rem; border: 2px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; margin-bottom: 15px; }
+        button { width: 100%; padding: 12px; background-color: #2563eb; color: white; border: none; border-radius: 6px; font-size: 1rem; font-weight: bold; cursor: pointer; }
+        button:hover { background-color: #1d4ed8; }
+        .result-box { margin-top: 20px; padding: 15px; border-radius: 6px; background-color: #f8fafc; border-left: 5px solid #2563eb; display: none; }
+        .result-title { font-size: 1.2rem; font-weight: bold; color: #0f172a; margin-bottom: 5px; }
+        .result-detail { color: #475569; font-size: 0.95rem; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h1>比較級チェッカー</h1>
+    <input type="text" id="wordInput" placeholder="形容詞・副詞を入力 (例: happy, famous)" onkeydown="if(event.key==='Enter') check()">
+    <button onclick="check()">判定する</button>
+
+    <div id="resultBox" class="result-box">
+        <div id="resultTitle" class="result-title"></div>
+        <div id="resultDetail" class="result-detail"></div>
+    </div>
+</div>
+
+<script>
+const IRREGULAR = {
+    "good": "better", "bad": "worse", "far": "farther / further",
+    "little": "less", "much": "more", "many": "more"
+};
+
+function countSyllables(word) {
+    word = word.toLowerCase();
+    if (word.length <= 3) return 1;
+    word = word.replace(/(?:[^laeiouy]|ed|es|e)$/, '').replace(/^y/, '');
+    const matches = word.match(/[aeiouy]{1,2}/g);
+    return matches ? matches.length : 1;
+}
+
+function check() {
+    const word = document.getElementById("wordInput").value.trim().toLowerCase();
+    const resultBox = document.getElementById("resultBox");
+    const resultTitle = document.getElementById("resultTitle");
+    const resultDetail = document.getElementById("resultDetail");
+
+    if (!word) return;
+
+    resultBox.style.display = "block";
+
+    // 1. 不規則変化
+    if (IRREGULAR[word]) {
+        resultTitle.textContent = `比較級: ${IRREGULAR[word]}`;
+        resultDetail.textContent = "ルール: 不規則変化（特別な形で覚える単語）です。";
+        return;
+    }
+
+    const syllables = countSyllables(word);
+
+    // 2. 規則変化の判定
+    if (syllables === 1) {
+        resultTitle.textContent = `比較級: ${word}er`;
+        resultDetail.textContent = "ルール: 1音節の短い単語なので、後ろに -er をつけます。";
+    } else if (syllables === 2) {
+        if (word.endsWith('y')) {
+            const form = word.slice(0, -1) + "ier";
+            resultTitle.textContent = `比較級: ${form}`;
+            resultDetail.textContent = "ルール: 2音節で語尾が -y のため、y を i に変えて -er をつけます。";
+        } else if (word.endsWith('le') || word.endsWith('er') || word.endsWith('ow')) {
+            resultTitle.textContent = `比較級: ${word}er`;
+            resultDetail.textContent = "ルール: 2音節ですが、語尾が -le/-er/-ow のため -er をつけます。";
+        } else {
+            resultTitle.textContent = `比較級: more ${word}`;
+            resultDetail.textContent = "ルール: 2音節の多くの単語は、前に more をつけます。";
+        }
+    } else {
+        resultTitle.textContent = `比較級: more ${word}`;
+        resultDetail.textContent = "ルール: 3音節以上の長い単語なので、前に more をつけます。";
+    }
+}
+</script>
+
+</body>
+</html>
